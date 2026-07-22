@@ -22,7 +22,7 @@ const createTransporter = () => {
  * @param {string} inviterName - Name of the person who sent the invite
  */
 export const sendInvitationEmail = async (toEmail, token, role, inviterName = 'System Administrator') => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://lab-maintenance-management.vercel.app/';
   const registrationLink = `${frontendUrl}/register/${token}`;
   const roleLabel = role === 'hod' ? 'Head of Department (HOD)' : 'Lab Technician';
 
