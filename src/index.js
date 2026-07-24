@@ -17,7 +17,13 @@ import path from 'path';
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors());
+const corsOptions = {
+  origin : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
+  credentials: true, 
+};
+app.use(cors(corsOptions));
+
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -29,8 +35,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/api', routes);
 
 // Health Check
-app.get('/health', (req, res) => {
-  res.json({ status: 'Server is running' });
+app.get('/', (req, res) => {
+    res.send('LabMaintain System API');
 });
 
 // Error handling middleware
