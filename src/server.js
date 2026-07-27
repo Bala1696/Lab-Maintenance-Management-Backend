@@ -5,56 +5,111 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import sequelize from './models/index.js';
 import routes from './routes/index.js';
+import path from 'path';
+import { User, Department, LabRoom } from './models/index.js';
+import { hashPassword } from './middleware/auth.js';
 
 dotenv.config();
 
 // Bypass self-signed certificate errors in development
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-import path from 'path';
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
-// Middleware
-app.use(helmet({ crossOriginResourcePolicy: false }));
-const corsOptions = {
-  origin : '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
-  credentials: true, 
-};
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+  })
+);
 
-app.use(morgan('combined'));
+app.use(morgan("dev"));
+
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from uploads folder
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
-// Routes
-app.use('/api', routes);
+/* ===========================
+   Static Upload Folder
+=========================== */
 
-// Health Check
-app.get('/', (req, res) => {
-    res.send('LabMaintain System API');
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads"))
+);
+
+/* ===========================
+   Home Route
+=========================== */
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Lab Maintenance Management API Running",
+    version: "1.0.0",
+  });
 });
 
-// Error handling middleware
+/* ===========================
+   Health Check
+=========================== */
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: "OK",
+    database: "Connected",
+  });
+});
+
+/* ===========================
+   API Routes
+=========================== */
+
+app.use("/api", routes);
+
+/* ===========================
+   404 Handler
+=========================== */
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route Not Found",
+  });
+});
+
+/* ===========================
+   Error Handler
+=========================== */
+
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  
-  // Handle Multer file size limit errors
-  if (err.code === 'LIMIT_FILE_SIZE' || err.message === 'File too large') {
-    return res.status(400).json({ 
-      message: 'The uploaded file is too large. Please select an image smaller than 5MB.' 
+  console.error(err);
+
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      success: false,
+      message: "Maximum upload size is 5MB",
     });
   }
 
-  res.status(500).json({ message: 'Internal server error', error: err.message });
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
 });
-
-import { User, Department, LabRoom } from './models/index.js';
-import { hashPassword } from './middleware/auth.js';
 
 // Auto-seed default database records if empty
 const seedDefaultData = async () => {
@@ -129,18 +184,23 @@ const seedDefaultData = async () => {
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connected successfully');
+    console.log("Database Connected Successfully");
 
-    await sequelize.sync({ alter: true });
-    console.log('Database models synchronized');
+    await sequelize.sync({
+      alter: true,
+    });
+
+    console.log("Database Synced Successfully");
 
     await seedDefaultData();
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server Running on Port ${PORT}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Server Startup Error");
+    console.error(error);
+
     process.exit(1);
   }
 };
