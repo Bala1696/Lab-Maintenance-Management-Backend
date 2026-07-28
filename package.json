@@ -2,7 +2,7 @@
   "name": "lab-asset-management-backend",
   "version": "1.0.0",
   "description": "Lab Asset & Maintenance Management System - Backend",
-  "main": "src/index.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",

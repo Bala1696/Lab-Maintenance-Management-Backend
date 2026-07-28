@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://lab-maintenance-management-backend.onrender.com/api';
 
 async function runTest() {
   console.log('🧪 Starting Lab Management System Integration Test Suite...\n');
